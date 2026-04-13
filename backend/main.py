@@ -4,6 +4,7 @@ from database import engine
 from auth import router as auth_router
 from trips import router as trips_router
 from activities import router as activities_router
+from budget import router as budget_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -12,6 +13,7 @@ app = FastAPI()
 app.include_router(auth_router, prefix="/auth")
 app.include_router(trips_router, prefix="/trips")
 app.include_router(activities_router, prefix="/trips")
+app.include_router(budget_router, prefix="/trips")
 
 @app.get("/")
 def root():
