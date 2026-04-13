@@ -4,7 +4,8 @@ from database import get_db
 from models import BudgetItem, Trip, TripMember, User
 from dependencies import get_current_user
 from pydantic import BaseModel
-
+from socket_manager import sio
+import asyncio
 router = APIRouter()
 
 class AddBudgetItemRequest(BaseModel):
@@ -34,6 +35,20 @@ def add_budget_item(
     )
     db.add(item)
     db.commit()
+    
+    # Broadcast budget update
+    all_items = db.query(BudgetItem).filter(BudgetItem.trip_id == trip_id).all()
+    total = sum(i.amount for i in all_items)
+    asyncio.run(sio.emit("budget_updated", {
+        "item": {
+            "id": item.id,
+            "name": item.name,
+            "amount": item.amount,
+            "paid_by": user.name,
+        },
+        "total": total,
+    }, room=trip_id))
+
     db.refresh(item)
 
     return {
