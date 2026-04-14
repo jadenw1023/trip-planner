@@ -8,6 +8,7 @@ from activities import router as activities_router
 from budget import router as budget_router
 from socket_manager import sio
 import socketio
+from ai import router as ai_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,6 +26,7 @@ app.include_router(auth_router, prefix="/auth")
 app.include_router(trips_router, prefix="/trips")
 app.include_router(activities_router, prefix="/trips")
 app.include_router(budget_router, prefix="/trips")
+app.include_router(ai_router, prefix="/trips")
 
 @app.get("/")
 def root():
