@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "../../../lib/api";
+import { getSocket, disconnectSocket } from "../../../lib/socket";
 
 interface Trip {
   id: string;
@@ -79,6 +80,36 @@ export default function TripPage() {
 
     fetchTrip();
   }, [tripId, router]);
+
+  useEffect(() => {
+  const socket = getSocket();
+
+  socket.on("connect", () => {
+    socket.emit("join_trip", { trip_id: tripId });
+  });
+
+  socket.on("activity_added", (data) => {
+    setActivities((prev) => [...prev, data]);
+  });
+
+  socket.on("vote_updated", (data) => {
+    setActivities((prev) =>
+      prev.map((a) =>
+        a.id === data.activity_id ? { ...a, votes: data.total_votes } : a
+      )
+    );
+  });
+
+  socket.on("budget_updated", (data) => {
+    setBudgetItems((prev) => [...prev, data.item]);
+    setBudgetTotal(data.total);
+  });
+
+  return () => {
+    socket.emit("leave_trip", { trip_id: tripId });
+    disconnectSocket();
+  };
+}, [tripId]);
 
   async function handleAddActivity(e: React.FormEvent) {
   e.preventDefault();
