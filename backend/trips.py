@@ -120,3 +120,23 @@ def get_trip(
         "invite_code": trip.invite_code,
         "members": member_list,
     }
+
+@router.get("/")
+def get_my_trips(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    memberships = db.query(TripMember).filter(TripMember.user_id == user.id).all()
+    trips = []
+    for m in memberships:
+        trip = db.query(Trip).filter(Trip.id == m.trip_id).first()
+        if trip:
+            trips.append({
+                "id": trip.id,
+                "name": trip.name,
+                "destination": trip.destination,
+                "start_date": trip.start_date,
+                "end_date": trip.end_date,
+                "role": m.role,
+            })
+    return trips
