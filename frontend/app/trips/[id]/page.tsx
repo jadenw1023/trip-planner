@@ -31,6 +31,13 @@ interface BudgetItem {
   paid_by: string;
 }
 
+interface Suggestion {
+  name: string;
+  description: string;
+  location: string;
+  category: string;
+}
+
 
 export default function TripPage() {
   const params = useParams();
@@ -47,7 +54,7 @@ export default function TripPage() {
   const [budgetTotal, setBudgetTotal] = useState(0);
   const [newExpense, setNewExpense] = useState("");
   const [newAmount, setNewAmount] = useState("");
-  const [suggestions, setSuggestions] = useState<string>("");
+const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [summary, setSummary] = useState("");
 
@@ -161,11 +168,27 @@ async function handleGetSuggestions(category: string = "") {
   setAiLoading(true);
   try {
     const response = await api.post(`/trips/${tripId}/suggest`, { category });
-    setSuggestions(response.data.suggestions);
+    const parsed = JSON.parse(response.data.suggestions.replace(/```json\n?|```/g, ""));
+    setSuggestions(parsed);
   } catch (err) {
     console.error("Failed to get suggestions", err);
   } finally {
     setAiLoading(false);
+  }
+}
+
+async function handleAddSuggestion(suggestion: Suggestion) {
+  try {
+    const response = await api.post(`/trips/${tripId}/activities`, {
+      name: suggestion.name,
+      description: suggestion.description,
+      location: suggestion.location,
+      category: suggestion.category,
+    });
+    setActivities([...activities, response.data]);
+    setSuggestions(suggestions.filter((s) => s.name !== suggestion.name));
+  } catch (err) {
+    console.error("Failed to add suggestion", err);
   }
 }
 
@@ -380,12 +403,26 @@ async function handleGetSummary() {
     </button>
   </div>
 
-  {suggestions && (
-    <div className="bg-[#181818] rounded-lg p-4 mb-4">
-      <h3 className="font-bold mb-3">Suggestions</h3>
-      <pre className="text-sm text-[#a1a1a1] whitespace-pre-wrap">{suggestions}</pre>
-    </div>
-  )}
+  {suggestions.length > 0 && (
+  <div className="space-y-3 mb-4">
+    <h3 className="font-bold">Suggestions</h3>
+    {suggestions.map((suggestion, index) => (
+      <div key={index} className="flex items-center justify-between bg-[#181818] rounded-lg p-4">
+        <div>
+          <p className="font-semibold">{suggestion.name}</p>
+          <p className="text-[#a1a1a1] text-sm">{suggestion.description}</p>
+          <p className="text-[#a1a1a1] text-xs mt-1">{suggestion.location} · {suggestion.category}</p>
+        </div>
+        <button
+          onClick={() => handleAddSuggestion(suggestion)}
+          className="px-4 py-2 bg-[#3B82F6] text-white text-sm rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+        >
+          Add to Trip
+        </button>
+      </div>
+    ))}
+  </div>
+)}
 
   {summary && (
     <div className="bg-[#181818] rounded-lg p-4">
