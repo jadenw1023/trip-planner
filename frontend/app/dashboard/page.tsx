@@ -37,7 +37,7 @@ export default function Dashboard() {
     }
 
     fetchTrips();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
@@ -51,12 +51,21 @@ export default function Dashboard() {
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-3xl font-bold">Your Trips</h1>
-        <Link
-          href="/trips/new"
-          className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
-        >
-          New Trip
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            href="/join"
+            className="px-6 py-2 border border-[#3B82F6] text-[#3B82F6] font-semibold rounded-lg hover:bg-[#3B82F6] hover:text-white transition-colors"
+          >
+            Join Trip
+          </Link>
+          <Link
+            href="/trips/new"
+            className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity"
+          >
+            New Trip
+          </Link>
+        </div>
+        
       </div>
 
       {trips.length === 0 ? (

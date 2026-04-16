@@ -225,9 +225,20 @@ async function handleGetSummary() {
       <div className="mb-10">
         <h1 className="text-3xl font-bold">{trip.name}</h1>
         <p className="text-[#a1a1a1]">{trip.destination} · {trip.start_date} → {trip.end_date}</p>
-        <p className="text-[#a1a1a1] text-sm mt-2">
-          Invite code: <span className="text-[#3B82F6] font-mono">{trip.invite_code}</span>
-        </p>
+        <div className="text-[#a1a1a1] text-sm mt-2">
+          <p>
+            Invite code: <span className="text-[#3B82F6] font-mono">{trip.invite_code}</span>
+          </p>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(`${window.location.origin}/join/${trip.invite_code}`);
+              alert("Invite link copied!");
+            }}
+            className="mt-1 text-xs text-[#3B82F6] hover:underline cursor-pointer"
+          >
+            Copy Invite Link
+          </button>
+        </div>
       </div>
 
       <section className="mb-10">
@@ -241,198 +252,197 @@ async function handleGetSummary() {
           ))}
         </div>
       </section>
+
       <section className="mb-10">
-  <h2 className="text-xl font-bold mb-4">Activities</h2>
-  <form onSubmit={handleAddActivity} className="flex flex-wrap gap-3 mb-6">
-    <input
-      type="text"
-      placeholder="Activity name"
-      value={newActivity}
-      onChange={(e) => setNewActivity(e.target.value)}
-      className="flex-1 min-w-[200px] px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-      required
-    />
-    <input
-      type="text"
-      placeholder="Location"
-      value={newLocation}
-      onChange={(e) => setNewLocation(e.target.value)}
-      className="flex-1 min-w-[150px] px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-    />
-    <input
-      type="date"
-      value={newDate}
-      onChange={(e) => setNewDate(e.target.value)}
-      className="px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-    />
-    <select
-      value={newCategory}
-      onChange={(e) => setNewCategory(e.target.value)}
-      className="px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-    >
-      <option value="">Category</option>
-      <option value="food">Food</option>
-      <option value="sightseeing">Sightseeing</option>
-      <option value="nightlife">Nightlife</option>
-      <option value="shopping">Shopping</option>
-      <option value="adventure">Adventure</option>
-    </select>
-    <button
-      type="submit"
-      className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-    >
-      Add
-    </button>
-  </form>
+        <h2 className="text-xl font-bold mb-4">Activities</h2>
+        <form onSubmit={handleAddActivity} className="flex flex-wrap gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Activity name"
+            value={newActivity}
+            onChange={(e) => setNewActivity(e.target.value)}
+            className="flex-1 min-w-[200px] px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Location"
+            value={newLocation}
+            onChange={(e) => setNewLocation(e.target.value)}
+            className="flex-1 min-w-[150px] px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+          />
+          <input
+            type="date"
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+          />
+          <select
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+          >
+            <option value="">Category</option>
+            <option value="food">Food</option>
+            <option value="sightseeing">Sightseeing</option>
+            <option value="nightlife">Nightlife</option>
+            <option value="shopping">Shopping</option>
+            <option value="adventure">Adventure</option>
+          </select>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Add
+          </button>
+        </form>
 
-  {activities.length === 0 ? (
-    <p className="text-[#a1a1a1]">No activities yet. Add one or get AI suggestions!</p>
-  ) : (
-    <div className="space-y-3">
-      {activities.map((activity) => (
-        <div key={activity.id} className="flex items-center justify-between bg-[#181818] rounded-lg p-4">
-          <div>
-            <p className="font-semibold">{activity.name}</p>
-            <p className="text-[#a1a1a1] text-sm">
-              {activity.location}{activity.date ? ` · ${activity.date}` : ""}{activity.category ? ` · ${activity.category}` : ""}
-            </p>
+        {activities.length === 0 ? (
+          <p className="text-[#a1a1a1]">No activities yet. Add one or get AI suggestions!</p>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between bg-[#181818] rounded-lg p-4">
+                <div>
+                  <p className="font-semibold">{activity.name}</p>
+                  <p className="text-[#a1a1a1] text-sm">
+                    {activity.location}{activity.date ? ` · ${activity.date}` : ""}{activity.category ? ` · ${activity.category}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleVote(activity.id, 1)}
+                    className="text-[#3B82F6] hover:opacity-80 cursor-pointer"
+                  >
+                    👍
+                  </button>
+                  <span className="text-sm font-semibold">{activity.votes}</span>
+                  <button
+                    onClick={() => handleVote(activity.id, -1)}
+                    className="text-red-500 hover:opacity-80 cursor-pointer"
+                  >
+                    👎
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleVote(activity.id, 1)}
-              className="text-[#3B82F6] hover:opacity-80 cursor-pointer"
-            >
-              👍
-            </button>
-            <span className="text-sm font-semibold">{activity.votes}</span>
-            <button
-              onClick={() => handleVote(activity.id, -1)}
-              className="text-red-500 hover:opacity-80 cursor-pointer"
-            >
-              👎
-            </button>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-4">Budget</h2>
+        <form onSubmit={handleAddExpense} className="flex gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Expense name"
+            value={newExpense}
+            onChange={(e) => setNewExpense(e.target.value)}
+            className="flex-1 px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+            required
+          />
+          <input
+            type="number"
+            placeholder="Amount"
+            value={newAmount}
+            onChange={(e) => setNewAmount(e.target.value)}
+            className="w-32 px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+            required
+          />
+          <button
+            type="submit"
+            className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Add
+          </button>
+        </form>
+
+        <div className="bg-[#181818] rounded-lg p-4 mb-4">
+          <p className="text-xl font-bold text-[#3B82F6]">Total: ${budgetTotal.toFixed(2)}</p>
+        </div>
+
+        {budgetItems.length === 0 ? (
+          <p className="text-[#a1a1a1]">No expenses yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {budgetItems.map((item) => (
+              <div key={item.id} className="flex justify-between bg-[#181818] rounded-lg p-3">
+                <p>{item.name}</p>
+                <p className="text-[#3B82F6] font-semibold">${item.amount.toFixed(2)}</p>
+              </div>
+            ))}
           </div>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold mb-4">AI Assistant</h2>
+        <div className="flex flex-wrap gap-3 mb-6">
+          <button
+            onClick={() => handleGetSuggestions()}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+          >
+            {aiLoading ? "Thinking..." : "Suggest Activities"}
+          </button>
+          <button
+            onClick={() => handleGetSuggestions("food")}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Food Ideas
+          </button>
+          <button
+            onClick={() => handleGetSuggestions("sightseeing")}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Sightseeing
+          </button>
+          <button
+            onClick={() => handleGetSuggestions("nightlife")}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Nightlife
+          </button>
+          <button
+            onClick={handleGetSummary}
+            disabled={aiLoading}
+            className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Trip Summary
+          </button>
         </div>
-      ))}
+
+        {suggestions.length > 0 && (
+          <div className="space-y-3 mb-4">
+            <h3 className="font-bold">Suggestions</h3>
+            {suggestions.map((suggestion, index) => (
+              <div key={index} className="flex items-center justify-between bg-[#181818] rounded-lg p-4">
+                <div>
+                  <p className="font-semibold">{suggestion.name}</p>
+                  <p className="text-[#a1a1a1] text-sm">{suggestion.description}</p>
+                  <p className="text-[#a1a1a1] text-xs mt-1">{suggestion.location} · {suggestion.category}</p>
+                </div>
+                <button
+                  onClick={() => handleAddSuggestion(suggestion)}
+                  className="px-4 py-2 bg-[#3B82F6] text-white text-sm rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Add to Trip
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {summary && (
+          <div className="bg-[#181818] rounded-lg p-4">
+            <h3 className="font-bold mb-3">Trip Summary</h3>
+            <p className="text-sm text-[#a1a1a1] whitespace-pre-wrap">{summary}</p>
+          </div>
+        )}
+      </section>
     </div>
-  )}
-</section>
-
-<section className="mb-10">
-  <h2 className="text-xl font-bold mb-4">Budget</h2>
-  <form onSubmit={handleAddExpense} className="flex gap-3 mb-6">
-    <input
-      type="text"
-      placeholder="Expense name"
-      value={newExpense}
-      onChange={(e) => setNewExpense(e.target.value)}
-      className="flex-1 px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-      required
-    />
-    <input
-      type="number"
-      placeholder="Amount"
-      value={newAmount}
-      onChange={(e) => setNewAmount(e.target.value)}
-      className="w-32 px-4 py-2 rounded-lg bg-[#282828] text-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
-      required
-    />
-    <button
-      type="submit"
-      className="px-6 py-2 bg-[#3B82F6] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-    >
-      Add
-    </button>
-  </form>
-
-  <div className="bg-[#181818] rounded-lg p-4 mb-4">
-    <p className="text-xl font-bold text-[#3B82F6]">Total: ${budgetTotal.toFixed(2)}</p>
-  </div>
-
-  {budgetItems.length === 0 ? (
-    <p className="text-[#a1a1a1]">No expenses yet.</p>
-  ) : (
-    <div className="space-y-2">
-      {budgetItems.map((item) => (
-        <div key={item.id} className="flex justify-between bg-[#181818] rounded-lg p-3">
-          <p>{item.name}</p>
-          <p className="text-[#3B82F6] font-semibold">${item.amount.toFixed(2)}</p>
-        </div>
-      ))}
-    </div>
-  )}
-</section>
-
-<section className="mb-10">
-  <h2 className="text-xl font-bold mb-4">AI Assistant</h2>
-  <div className="flex flex-wrap gap-3 mb-6">
-    <button
-      onClick={() => handleGetSuggestions()}
-      disabled={aiLoading}
-      className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
-    >
-      {aiLoading ? "Thinking..." : "Suggest Activities"}
-    </button>
-    <button
-      onClick={() => handleGetSuggestions("food")}
-      disabled={aiLoading}
-      className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
-    >
-      Food Ideas
-    </button>
-    <button
-      onClick={() => handleGetSuggestions("sightseeing")}
-      disabled={aiLoading}
-      className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
-    >
-      Sightseeing
-    </button>
-    <button
-      onClick={() => handleGetSuggestions("nightlife")}
-      disabled={aiLoading}
-      className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
-    >
-      Nightlife
-    </button>
-    <button
-      onClick={handleGetSummary}
-      disabled={aiLoading}
-      className="px-4 py-2 bg-[#181818] text-white rounded-lg hover:bg-[#282828] transition-colors cursor-pointer disabled:opacity-50"
-    >
-      Trip Summary
-    </button>
-  </div>
-
-  {suggestions.length > 0 && (
-  <div className="space-y-3 mb-4">
-    <h3 className="font-bold">Suggestions</h3>
-    {suggestions.map((suggestion, index) => (
-      <div key={index} className="flex items-center justify-between bg-[#181818] rounded-lg p-4">
-        <div>
-          <p className="font-semibold">{suggestion.name}</p>
-          <p className="text-[#a1a1a1] text-sm">{suggestion.description}</p>
-          <p className="text-[#a1a1a1] text-xs mt-1">{suggestion.location} · {suggestion.category}</p>
-        </div>
-        <button
-          onClick={() => handleAddSuggestion(suggestion)}
-          className="px-4 py-2 bg-[#3B82F6] text-white text-sm rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
-        >
-          Add to Trip
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-
-  {summary && (
-    <div className="bg-[#181818] rounded-lg p-4">
-      <h3 className="font-bold mb-3">Trip Summary</h3>
-      <p className="text-sm text-[#a1a1a1] whitespace-pre-wrap">{summary}</p>
-    </div>
-  )}
-</section>
-
-    </div>
-
   );
 }
