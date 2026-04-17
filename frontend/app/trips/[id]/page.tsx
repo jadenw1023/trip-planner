@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "../../../lib/api";
 import { getSocket, disconnectSocket } from "../../../lib/socket";
+import ReactMarkdown from "react-markdown";
 
 interface Trip {
   id: string;
@@ -437,10 +438,12 @@ async function handleGetSummary() {
         )}
 
         {summary && (
-          <div className="bg-[#181818] rounded-lg p-4">
+        <div className="bg-[#181818] rounded-lg p-4">
             <h3 className="font-bold mb-3">Trip Summary</h3>
-            <p className="text-sm text-[#a1a1a1] whitespace-pre-wrap">{summary}</p>
-          </div>
+            <div className="text-sm text-[#a1a1a1] prose prose-invert prose-sm max-w-none">
+            <ReactMarkdown>{summary}</ReactMarkdown>
+            </div>
+        </div>
         )}
       </section>
     </div>
