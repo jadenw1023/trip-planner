@@ -39,6 +39,11 @@ export default function Dashboard() {
     fetchTrips();
   }, [router]);
 
+  function handleLogout() {
+    localStorage.removeItem("token");
+    router.push("/");
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -64,8 +69,13 @@ export default function Dashboard() {
           >
             New Trip
           </Link>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 text-[#6B7280] hover:text-white transition-colors cursor-pointer"
+          >
+            Log Out
+          </button>
         </div>
-        
       </div>
 
       {trips.length === 0 ? (

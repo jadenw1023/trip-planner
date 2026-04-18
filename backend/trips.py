@@ -4,6 +4,7 @@ from database import get_db
 from models import Trip, TripMember, User
 from dependencies import get_current_user
 from pydantic import BaseModel
+from models import Trip, TripMember, User, Activity, Vote, BudgetItem
 
 router = APIRouter()
 
@@ -139,4 +140,30 @@ def get_my_trips(
                 "end_date": trip.end_date,
                 "role": m.role,
             })
+    return trips
+
+@router.delete("/{trip_id}")
+def delete_trip(
+    trip_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    trip = db.query(Trip).filter(Trip.id == trip_id).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    if trip.created_by != user.id:
+        raise HTTPException(status_code=403, detail="Only the trip creator can delete this trip")
+
+    activities = db.query(Activity).filter(Activity.trip_id == trip_id).all()
+    for activity in activities:
+        db.query(Vote).filter(Vote.activity_id == activity.id).delete()
+    db.query(Activity).filter(Activity.trip_id == trip_id).delete()
+    db.query(BudgetItem).filter(BudgetItem.trip_id == trip_id).delete()
+    db.query(TripMember).filter(TripMember.trip_id == trip_id).delete()
+    db.delete(trip)
+    db.commit()
+
+    return {"message": "Trip deleted"}
+    
     return trips

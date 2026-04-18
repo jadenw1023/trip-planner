@@ -86,3 +86,26 @@ def get_budget(
             for item in items
         ]
     }
+
+@router.delete("/{trip_id}/budget/{item_id}")
+def delete_budget_item(
+    trip_id: str,
+    item_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    member = db.query(TripMember).filter(
+        TripMember.trip_id == trip_id,
+        TripMember.user_id == user.id
+    ).first()
+    if not member:
+        raise HTTPException(status_code=403, detail="Not a member of this trip")
+
+    item = db.query(BudgetItem).filter(BudgetItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Budget item not found")
+
+    db.delete(item)
+    db.commit()
+
+    return {"message": "Budget item deleted"}

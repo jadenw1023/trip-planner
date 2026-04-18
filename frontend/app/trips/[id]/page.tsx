@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import api from "../../../lib/api";
 import { getSocket, disconnectSocket } from "../../../lib/socket";
 import ReactMarkdown from "react-markdown";
+import Link from "next/link";
 
 interface Trip {
   id: string;
@@ -39,7 +40,6 @@ interface Suggestion {
   category: string;
 }
 
-
 export default function TripPage() {
   const params = useParams();
   const router = useRouter();
@@ -50,12 +50,12 @@ export default function TripPage() {
   const [newActivity, setNewActivity] = useState("");
   const [newLocation, setNewLocation] = useState("");
   const [newDate, setNewDate] = useState("");
-  const [newCategory, setNewCategory] = useState(""); 
+  const [newCategory, setNewCategory] = useState("");
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [budgetTotal, setBudgetTotal] = useState(0);
   const [newExpense, setNewExpense] = useState("");
   const [newAmount, setNewAmount] = useState("");
-const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [summary, setSummary] = useState("");
 
@@ -77,8 +77,6 @@ const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
         const budgetResponse = await api.get(`/trips/${tripId}/budget`);
         setBudgetItems(budgetResponse.data.items);
         setBudgetTotal(budgetResponse.data.total);
-
-
       } catch (err) {
         console.error("Failed to fetch trip", err);
       } finally {
@@ -90,120 +88,145 @@ const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   }, [tripId, router]);
 
   useEffect(() => {
-  const socket = getSocket();
+    const socket = getSocket();
 
-  socket.on("connect", () => {
-    socket.emit("join_trip", { trip_id: tripId });
-  });
+    socket.on("connect", () => {
+      socket.emit("join_trip", { trip_id: tripId });
+    });
 
-  socket.on("activity_added", (data) => {
-    setActivities((prev) => [...prev, data]);
-  });
+    socket.on("activity_added", (data) => {
+      setActivities((prev) => [...prev, data]);
+    });
 
-  socket.on("vote_updated", (data) => {
-    setActivities((prev) =>
-      prev.map((a) =>
-        a.id === data.activity_id ? { ...a, votes: data.total_votes } : a
-      )
-    );
-  });
+    socket.on("vote_updated", (data) => {
+      setActivities((prev) =>
+        prev.map((a) =>
+          a.id === data.activity_id ? { ...a, votes: data.total_votes } : a
+        )
+      );
+    });
 
-  socket.on("budget_updated", (data) => {
-    setBudgetItems((prev) => [...prev, data.item]);
-    setBudgetTotal(data.total);
-  });
+    socket.on("budget_updated", (data) => {
+      setBudgetItems((prev) => [...prev, data.item]);
+      setBudgetTotal(data.total);
+    });
 
-  return () => {
-    socket.emit("leave_trip", { trip_id: tripId });
-    disconnectSocket();
-  };
-}, [tripId]);
+    return () => {
+      socket.emit("leave_trip", { trip_id: tripId });
+      disconnectSocket();
+    };
+  }, [tripId]);
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    router.push("/");
+  }
 
   async function handleAddActivity(e: React.FormEvent) {
-  e.preventDefault();
-  try {
-    const response = await api.post(`/trips/${tripId}/activities`, {
-      name: newActivity,
-      location: newLocation,
-      date: newDate,
-      category: newCategory,
-    });
-    setActivities([...activities, response.data]);
-    setNewActivity("");
-    setNewLocation("");
-    setNewDate("");
-    setNewCategory("");
-  } catch (err) {
-    console.error("Failed to add activity", err);
+    e.preventDefault();
+    try {
+      const response = await api.post(`/trips/${tripId}/activities`, {
+        name: newActivity,
+        location: newLocation,
+        date: newDate,
+        category: newCategory,
+      });
+      setActivities([...activities, response.data]);
+      setNewActivity("");
+      setNewLocation("");
+      setNewDate("");
+      setNewCategory("");
+    } catch (err) {
+      console.error("Failed to add activity", err);
+    }
   }
-}
 
-async function handleVote(activityId: string, value: number) {
-  try {
-    await api.post(`/trips/${tripId}/activities/${activityId}/vote`, { value });
-    const response = await api.get(`/trips/${tripId}/activities`);
-    setActivities(response.data);
-  } catch (err) {
-    console.error("Failed to vote", err);
+  async function handleVote(activityId: string, value: number) {
+    try {
+      await api.post(`/trips/${tripId}/activities/${activityId}/vote`, { value });
+      const response = await api.get(`/trips/${tripId}/activities`);
+      setActivities(response.data);
+    } catch (err) {
+      console.error("Failed to vote", err);
+    }
   }
-}
 
-async function handleAddExpense(e: React.FormEvent) {
-  e.preventDefault();
-  try {
-    await api.post(`/trips/${tripId}/budget`, {
-      name: newExpense,
-      amount: parseFloat(newAmount),
-    });
-    const response = await api.get(`/trips/${tripId}/budget`);
-    setBudgetItems(response.data.items);
-    setBudgetTotal(response.data.total);
-    setNewExpense("");
-    setNewAmount("");
-  } catch (err) {
-    console.error("Failed to add expense", err);
+  async function handleDeleteActivity(activityId: string) {
+    try {
+      await api.delete(`/trips/${tripId}/activities/${activityId}`);
+      setActivities(activities.filter((a) => a.id !== activityId));
+    } catch (err) {
+      console.error("Failed to delete activity", err);
+    }
   }
-}
 
-async function handleGetSuggestions(category: string = "") {
-  setAiLoading(true);
-  try {
-    const response = await api.post(`/trips/${tripId}/suggest`, { category });
-    const parsed = JSON.parse(response.data.suggestions.replace(/```json\n?|```/g, ""));
-    setSuggestions(parsed);
-  } catch (err) {
-    console.error("Failed to get suggestions", err);
-  } finally {
-    setAiLoading(false);
+  async function handleAddExpense(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await api.post(`/trips/${tripId}/budget`, {
+        name: newExpense,
+        amount: parseFloat(newAmount),
+      });
+      const response = await api.get(`/trips/${tripId}/budget`);
+      setBudgetItems(response.data.items);
+      setBudgetTotal(response.data.total);
+      setNewExpense("");
+      setNewAmount("");
+    } catch (err) {
+      console.error("Failed to add expense", err);
+    }
   }
-}
 
-async function handleAddSuggestion(suggestion: Suggestion) {
-  try {
-    const response = await api.post(`/trips/${tripId}/activities`, {
-      name: suggestion.name,
-      description: suggestion.description,
-      location: suggestion.location,
-      category: suggestion.category,
-    });
-    setActivities([...activities, response.data]);
-    setSuggestions(suggestions.filter((s) => s.name !== suggestion.name));
-  } catch (err) {
-    console.error("Failed to add suggestion", err);
+  async function handleDeleteExpense(itemId: string) {
+    try {
+      await api.delete(`/trips/${tripId}/budget/${itemId}`);
+      const response = await api.get(`/trips/${tripId}/budget`);
+      setBudgetItems(response.data.items);
+      setBudgetTotal(response.data.total);
+    } catch (err) {
+      console.error("Failed to delete expense", err);
+    }
   }
-}
 
-async function handleGetSummary() {
-  setAiLoading(true);
-  try {
-    const response = await api.get(`/trips/${tripId}/summary`);
-    setSummary(response.data.summary);
-  } catch (err) {
-    console.error("Failed to get summary", err);
-  } finally {
-    setAiLoading(false);
+  async function handleGetSuggestions(category: string = "") {
+    setAiLoading(true);
+    try {
+      const response = await api.post(`/trips/${tripId}/suggest`, { category });
+      const parsed = JSON.parse(response.data.suggestions.replace(/```json\n?|```/g, ""));
+      setSuggestions(parsed);
+    } catch (err) {
+      console.error("Failed to get suggestions", err);
+    } finally {
+      setAiLoading(false);
+    }
   }
-}
+
+  async function handleAddSuggestion(suggestion: Suggestion) {
+    try {
+      const response = await api.post(`/trips/${tripId}/activities`, {
+        name: suggestion.name,
+        description: suggestion.description,
+        location: suggestion.location,
+        category: suggestion.category,
+      });
+      setActivities([...activities, response.data]);
+      setSuggestions(suggestions.filter((s) => s.name !== suggestion.name));
+    } catch (err) {
+      console.error("Failed to add suggestion", err);
+    }
+  }
+
+  async function handleGetSummary() {
+    setAiLoading(true);
+    try {
+      const response = await api.get(`/trips/${tripId}/summary`);
+      setSummary(response.data.summary);
+    } catch (err) {
+      console.error("Failed to get summary", err);
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -223,24 +246,55 @@ async function handleGetSummary() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold">{trip.name}</h1>
-        <p className="text-[#a1a1a1]">{trip.destination} · {trip.start_date} → {trip.end_date}</p>
-        <div className="text-[#a1a1a1] text-sm mt-2">
-          <p>
-            Invite code: <span className="text-[#3B82F6] font-mono">{trip.invite_code}</span>
-          </p>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/join/${trip.invite_code}`);
-              alert("Invite link copied!");
-            }}
-            className="mt-1 text-xs text-[#3B82F6] hover:underline cursor-pointer"
-          >
-            Copy Invite Link
-          </button>
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-bold">{trip.name}</h1>
+          <p className="text-[#a1a1a1]">{trip.destination} · {trip.start_date} → {trip.end_date}</p>
+          <div className="text-[#a1a1a1] text-sm mt-2">
+            <p>
+              Invite code: <span className="text-[#3B82F6] font-mono">{trip.invite_code}</span>
+            </p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/join/${trip.invite_code}`);
+                alert("Invite link copied!");
+              }}
+              className="mt-1 text-xs text-[#3B82F6] hover:underline cursor-pointer"
+            >
+              Copy Invite Link
+            </button>
+          </div>
         </div>
-      </div>
+        <div className="flex gap-3">
+          <Link
+            href="/dashboard"
+            className="px-4 py-2 text-[#a1a1a1] hover:text-white transition-colors"
+          >
+            ← Dashboard
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-[#6B7280] hover:text-white transition-colors cursor-pointer"
+          >
+            Log Out
+          </button>
+            <button
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this trip?")) {
+                    try {
+                      await api.delete(`/trips/${tripId}`);
+                      router.push("/dashboard");
+                    } catch (err) {
+                      console.error("Failed to delete trip", err);
+                    }
+                  }
+                }}
+                className="px-4 py-2 text-red-500 hover:text-red-400 transition-colors cursor-pointer"
+      >
+        Delete Trip
+      </button>
+          </div>
+        </div>
 
       <section className="mb-10">
         <h2 className="text-xl font-bold mb-4">Members</h2>
@@ -324,6 +378,12 @@ async function handleGetSummary() {
                   >
                     👎
                   </button>
+                  <button
+                    onClick={() => handleDeleteActivity(activity.id)}
+                    className="text-[#6B7280] hover:text-red-500 transition-colors cursor-pointer text-sm"
+                  >
+                    ✕
+                  </button>
                 </div>
               </div>
             ))}
@@ -367,9 +427,17 @@ async function handleGetSummary() {
         ) : (
           <div className="space-y-2">
             {budgetItems.map((item) => (
-              <div key={item.id} className="flex justify-between bg-[#181818] rounded-lg p-3">
+              <div key={item.id} className="flex justify-between items-center bg-[#181818] rounded-lg p-3">
                 <p>{item.name}</p>
-                <p className="text-[#3B82F6] font-semibold">${item.amount.toFixed(2)}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-[#3B82F6] font-semibold">${item.amount.toFixed(2)}</p>
+                  <button
+                    onClick={() => handleDeleteExpense(item.id)}
+                    className="text-[#6B7280] hover:text-red-500 transition-colors cursor-pointer text-sm"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -438,12 +506,12 @@ async function handleGetSummary() {
         )}
 
         {summary && (
-        <div className="bg-[#181818] rounded-lg p-4">
+          <div className="bg-[#181818] rounded-lg p-4">
             <h3 className="font-bold mb-3">Trip Summary</h3>
             <div className="text-sm text-[#a1a1a1] prose prose-invert prose-sm max-w-none">
-            <ReactMarkdown>{summary}</ReactMarkdown>
+              <ReactMarkdown>{summary}</ReactMarkdown>
             </div>
-        </div>
+          </div>
         )}
       </section>
     </div>

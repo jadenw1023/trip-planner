@@ -142,3 +142,27 @@ def vote_on_activity(
     db.commit()
 
     return {"message": "Vote recorded"}
+
+@router.delete("/{trip_id}/activities/{activity_id}")
+def delete_activity(
+    trip_id: str,
+    activity_id: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    member = db.query(TripMember).filter(
+        TripMember.trip_id == trip_id,
+        TripMember.user_id == user.id
+    ).first()
+    if not member:
+        raise HTTPException(status_code=403, detail="Not a member of this trip")
+
+    activity = db.query(Activity).filter(Activity.id == activity_id).first()
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    db.query(Vote).filter(Vote.activity_id == activity_id).delete()
+    db.delete(activity)
+    db.commit()
+
+    return {"message": "Activity deleted"}
